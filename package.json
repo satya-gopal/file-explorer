@@ -6,10 +6,16 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
+    "axios": "^1.7.7",
+    "dotenv-expand": "^11.0.6",
+    "fast-glob": "^3.3.2",
+    "immer": "^10.1.1",
+    "micromatch": "^4.0.8",
+    "minimatch": "^10.0.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-modal": "^3.12.1",
-    "react-scripts": "3.4.1"
+    "react-scripts": "^5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,129 +1,118 @@
-import React, {Component} from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import Tasks from './Tasks';
 import AddTask from './AddTask';
 import close from '../images/close.png';
 
-export default class Dashboard extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            isAddTaskOpen: false,
-            tasks: [],
+const Dashboard = () => {
+    const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+    const [tasks, setTasks] = useState([]);
+
+    
+
+    // Toggle task status and reload tasks
+    // const toggleTaskStatus = async (task) => {
+    //     if (await saveTask(task)) {
+    //         setTasks([...tasks]);  // Trigger re-render by updating state
+    //     }
+    // };
+
+    // Load tasks from the API
+    const loadTasks = async () => {
+        setTasks(await getTasks());
+    };
+
+    // Toggle the add task modal
+    const toggleAddTaskModal = () => {
+        setIsAddTaskOpen(!isAddTaskOpen);
+    };
+
+    // Add a new task
+    const addTask = async (description) => {
+        toggleAddTaskModal();
+        const task = { description };
+        await saveTask(task);
+        await loadTasks();
+    };
+
+    // Save task (create)
+    const saveTask = async (task) => {
+        let res = null;
+        const options = {
+            // method: task?.id ? 'PUT' : 'POST', 
+            method: 'POST', 
+            body: JSON.stringify(task),
+            headers: { "Content-Type": "application/json" }
         };
-        this.toggleTaskStatus = this.toggleTaskStatus.bind(this);
-        this.toggleAddTaskModal = this.toggleAddTaskModal.bind(this);
-        this.deleteTask = this.deleteTask.bind(this);
-        this.addTask = this.addTask.bind(this);
-    }
 
-    componentDidMount() {
-        this.loadTasks();
-    }
+        // if (task?.id) {
+        //     res = await fetch('/api/tasks', options);
+        // } else {
+            res = await fetch('/api/tasks/add', options);
+        // }
 
-    async toggleTaskStatus(task) {
-        if (await this.saveTask(task)) {
-            this.forceUpdate(); 
+        if (res?.status === 200) {
+            await loadTasks();
+            return true;
         }
-    }
+        return false;
+    };
 
-    async loadTasks() {
-        this.setState({
-            tasks: await this.getTasks()
-        })
-    }
-
-    toggleAddTaskModal() {
-        this.setState({
-            isAddTaskOpen: !this.state.isAddTaskOpen
+    // Delete a task
+    const deleteTask = async (id) => {
+        const res = await fetch(`/api/tasks?id=${id}`, {
+            method: 'DELETE',
+            headers: { "Content-Type": "application/json" }
         });
-    }  
 
-    async addTask(description) {
-        this.toggleAddTaskModal();
-        var task = {
-            description: description
-        };
-        await this.saveTask(task);
-        await this.loadTasks();
-    }  
-
-    async saveTask(task) {
-        var res = null;
-        if (task !== null && task.id > 0) {
-            res = await fetch('/api/tasks',{
-                method: 'PUT',
-                body: JSON.stringify(task),
-                headers: {"Content-Type": "application/json"}
-            });
-            if (res.status === 200) {
-                this.loadTasks();
-            }
-        }
-        else {
-            res = await fetch('/api/tasks',{
-                method: 'POST',
-                body: JSON.stringify(task),
-                headers: {"Content-Type": "application/json"}
-            });
-        }
-
-        if (res !== null && res.status === 200) {
-            this.loadTasks();
+        if (res?.status === 200) {
+            await loadTasks();
             return true;
         }
-
         return false;
-    }
+    };
 
-    async deleteTask(id) {
-        var res = await fetch('/api/tasks?id=' + id,{
-                method: 'DELETE',
-                headers: {"Content-Type": "application/json"}
-            });
-
-        if (res !== null && res.status === 200) {
-            this.loadTasks();
-            return true;
-        }
-
-        return false;
-    }
-
-    async getTasks() {
+    const getTasks = async () => {
         const response = await fetch('/api/tasks');
         const body = await response.json();
         if (response.status !== 200) {
-            throw Error(body.message) 
+            throw new Error(body.message);
         }
         return body;
-    }
+    };
 
-    render() {
-        return (
+
+    useEffect(() => {
+        loadTasks();
+    }, []);
+
+    return (
+        <div>
             <div>
-                <div>
-                    <div className="add-task">
-                        <button onClick={this.toggleAddTaskModal}>Add New Task</button>
-                    </div>
-                    <Tasks tasks={this.state.tasks} toggleTaskStatus={this.toggleTaskStatus} deleteTask={this.deleteTask} />
+                <div className="add-task">
+                    <button onClick={toggleAddTaskModal}>Add New Task</button>
                 </div>
-                <Modal 
-                    isOpen={this.state.isAddTaskOpen}
-                    onRequestClose={() => this.toggleAddTaskModal(false)}
-                    className="modal"
-                    overlayClassName="overlay">
-                    <div>
-                        <img src={close} className="modal-close" alt="close" onClick={() => this.toggleAddTaskModal(false)} />
-                        <div className="modal-title">
-                            <h3>Add Task</h3>
-                        </div>
-                        <div>
-                            <AddTask handleSave={this.addTask} />
-                        </div>
-                    </div>
-                </Modal>
+                {/* <Tasks tasks={tasks} toggleTaskStatus={toggleTaskStatus} deleteTask={deleteTask} /> */}
+                <Tasks tasks={tasks} deleteTask={deleteTask} />
+
             </div>
-        );
-    }
-}
+            <Modal 
+                isOpen={isAddTaskOpen}
+                onRequestClose={toggleAddTaskModal}
+                className="modal"
+                overlayClassName="overlay">
+                <div>
+                    <img src={close} className="modal-close" alt="close" onClick={toggleAddTaskModal} />
+                    <div className="modal-title">
+                        <h3>Add Task</h3>
+                    </div>
+                    <div>
+                        <AddTask handleSave={addTask} />
+                    </div>
+                </div>
+            </Modal>
+        </div>
+    );
+};
+
+export default Dashboard;

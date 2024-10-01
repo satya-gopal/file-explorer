@@ -1,43 +1,42 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-class AddTask extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            description: null,
-        };
-        this.handleSave = this.handleSave.bind(this);
-    }
+const AddTask = ({ handleSave }) => {
+    const [description, setDescription] = useState("");
+    const [err,setErr] = useState("");
 
-    handleSave() {
-        const { description } = this.state;
-        if (description !== null && description.trim() !== "") {
-            this.props.handleSave(description);
-        }
-    }
-
-    handleDescriptionChange = event => {
-        this.setState({ description: event.target.value });
+    const handleDescriptionChange = (event) => {
+        setErr("");
+        setDescription(event.target.value);
     };
 
-    render() {
-        return (
-            <div className="form-main">
-                <div class="form-entry">
-                    <p>Description:</p>
-                    <input className="task" value={this.state.description} onChange={this.handleDescriptionChange} />
-                </div>
-                <div className="form-action">
-                    <button className="" onClick={this.handleSave}>Save</button>
-                </div>
-            </div>
-        );
-    }
-}
+    const handleSaveClick = () => {
+        if (description.trim() !== "") {
+            handleSave(description);
+        }
+        else {
+            setErr("Enter Valid Task")
+        }
+    };
 
-AddTask.propTypes = {
-    handleSave: PropTypes.func.isRequired
+    return (
+        <div className="form-main">
+            <div className="form-entry">
+                <p>Description:</p>
+                <input
+                    className="task"
+                    value={description}
+                    onChange={handleDescriptionChange}
+                />
+               { err ? <span style={{ color: 'red' }}>{err}</span> : "" }
+            </div>
+            <div className="form-action">
+                <button className="" onClick={handleSaveClick}>Save</button>
+            </div>
+        </div>
+    );
 };
+
+
 
 export default AddTask;

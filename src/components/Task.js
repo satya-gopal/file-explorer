@@ -1,51 +1,40 @@
-import React, {Component} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import Checkbox from './Checkbox';
 import trash from '../images/trash.png';
 
-export default class Task extends Component {
-    constructor(props) {
-        super(props);
-        this.toggleTaskStatus = this.toggleTaskStatus.bind(this);
-        this.deleteTask = this.deleteTask.bind(this);
-    }
+const Task = ({ task, deleteTask }) => {
+    // const toggleTaskStatusHandler = () => {
+    //     const updatedTask = { ...task, completed: !task.completed };
+    //     toggleTaskStatus(updatedTask);
+    // };
 
-    toggleTaskStatus() {
-        this.props.task.completed = !this.props.task.completed;
-        this.props.toggleTaskStatus(this.props.task);
-    }
+    const deleteTaskHandler = () => deleteTask(task.id);
 
-    deleteTask = () => this.props.deleteTask(this.props.task.id);
-
-    getDescriptionCss(task) {
+    const getDescriptionCss = (task) => {
         let cssClass = "float-left width-70 text-align-left";
         if (task.completed) {
             cssClass += " task-completed";
         }
         return cssClass;
-    }
+    };
 
-    render() {
-        const task = this.props.task;
-        return (
-            <div className="task-item">
-                <div className="float-left width-15">
-                    <Checkbox isChecked={Boolean(task.completed)} handleCheckboxChange={this.toggleTaskStatus} />
-                </div>
-                <div className={this.getDescriptionCss(task)}>
-                    {task.description}
-                </div> 
-                <div className="float-left width-15">
-                    <img className="float-left clickable" src={trash} alt="delete" onClick={this.deleteTask} />
-                </div>
-                <div style={{clear:'both'}} />
+    return (
+        <div className="task-item">
+            {/* <div className="float-left width-15">
+                <Checkbox isChecked={Boolean(task.completed)} handleCheckboxChange={toggleTaskStatusHandler} />
+            </div> */}
+            <div className={getDescriptionCss(task)}>
+                {task.description}
             </div>
-        );
-    }
-} 
-
-Task.propTypes = {
-    task: PropTypes.object.isRequired,
-    toggleTaskStatus: PropTypes.func.isRequired,
-    deleteTask: PropTypes.func.isRequired
+            <div className="float-left width-15">
+                <img className="float-left clickable" src={trash} alt="delete" onClick={deleteTaskHandler} />
+            </div>
+            <div style={{ clear: 'both' }} />
+        </div>
+    );
 };
+
+
+
+export default Task;
