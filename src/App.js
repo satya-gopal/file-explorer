@@ -64,28 +64,48 @@ console.log(selectedItemsToDisplay,"selectedItemsToDisplay");
   };
 
 
-const getIsPartiallySelectedFilePath = ()=>{
+  useEffect(() => {
+    if (selectedItems.length) {
+      getPartialSelectedItems();
+    }
+  }, [selectedItems]);
 
-}
+  const getPartialSelectedItems = () => {
+    const partialSelectedPaths = selectedItems.map((item) =>
+      item.split("/").slice(0, -1).join("/")
+    );
+    const uniquePartialSelectedPaths = [...new Set(partialSelectedPaths)];
+    const obj = {
+      isDirectory: true,
+      status: "Partially Selected",
+    };
 
-useEffect(()=>{
-  
-})
+    const finalPartialSelectedItems = uniquePartialSelectedPaths.map(
+      (path) => ({
+        ...obj,
+        path,
+        name: path.split("/").slice(-1)[0],
+      })
+    );
+    setSelectedItemsToDisplay([
+      ...selectedItemsToDisplay,
+      ...finalPartialSelectedItems,
+    ]);
+  };
 
   const handleSelection = (item) => {
-    console.log(item,"item")
     const alreadySelected = selectedItems.includes(item.path);
-  
+
     if (alreadySelected) {
       // Deselect logic
       if (item.isDirectory) {
         const childItems = getChildItems(item.path);
         setSelectedItems(
           selectedItems.filter(
-            (i) => ![item.path, ...childItems.map((child) => child.path)].includes(i)
-            )
-          );
-
+            (i) =>
+              ![item.path, ...childItems.map((child) => child.path)].includes(i)
+          )
+        );
       } else {
         setSelectedItems(selectedItems.filter((i) => i !== item.path));
       }
@@ -95,13 +115,13 @@ useEffect(()=>{
         const allChildItemsSelected = childItems.every((child) =>
           selectedItems.includes(child.path)
         );
-  
+
         if (allChildItemsSelected) {
           setSelectedItems([
             ...selectedItems.filter(
               (i) => !childItems.map((child) => child.path).includes(i)
             ),
-            item.path, 
+            item.path,
           ]);
         } else {
           setSelectedItems([
