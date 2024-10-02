@@ -64,13 +64,39 @@ console.log(selectedItemsToDisplay,"selectedItemsToDisplay");
   };
 
 
-const getIsPartiallySelectedFilePath = ()=>{
+// const getIsPartiallySelectedFilePath = ()=>{
 
-}
+// }
 
-useEffect(()=>{
-  
-})
+useEffect(() => {
+  if (selectedItems.length) {
+    getPartialSelectedItems();
+  }
+}, [selectedItems]);
+
+const getPartialSelectedItems = () => {
+  const partialSelectedPaths = selectedItems.map((item) =>
+    item.split("/").slice(0, -1).join("/")
+  );
+  const uniquePartialSelectedPaths = [...new Set(partialSelectedPaths)];
+  const obj = {
+    isDirectory: true,
+    status: "Partially Selected",
+  };
+
+  const finalPartialSelectedItems = uniquePartialSelectedPaths.map(
+    (path) => ({
+      ...obj,
+      path,
+      name: path.split("/").slice(-1)[0],
+    })
+  );
+  setSelectedItemsToDisplay([
+    ...selectedItemsToDisplay,
+    ...finalPartialSelectedItems,
+  ]);
+};
+
 
   const handleSelection = (item) => {
     console.log(item,"item")
@@ -175,7 +201,7 @@ useEffect(()=>{
       axios.post("http://127.0.0.1:5000/delete", { path: item })
     );
 
-    Promise.all(promises)
+    Promise.all(promises) 
       .then(() => {
         setSelectedItems([]);
         fetchFiles(currentPath);
