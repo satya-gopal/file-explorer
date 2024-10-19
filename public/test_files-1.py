@@ -2,21 +2,23 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import shutil
+import time  
+
 app = Flask(__name__)
 CORS(app)
-
-
-
 
 def get_files_in_directory(path):
     items = []
     for item in os.listdir(path):
         item_path = os.path.join(path, item)
+        # Get the last modified time in a human-readable format
+        last_modified = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(os.path.getmtime(item_path)))
         items.append({
             'name': item,
             'isDirectory': os.path.isdir(item_path),
             'path': item_path,
             'size': os.path.getsize(item_path) if os.path.isfile(item_path) else None,
+            'dateModified': last_modified  # Include the modification date
         })
     
     # Sort items: folders first, then files, both in alphabetical order
@@ -37,7 +39,6 @@ def delete_item():
     if os.path.exists(item_path):
         try:
             if os.path.isdir(item_path):
-                # Remove the directory even if it's not empty
                 shutil.rmtree(item_path)
             else:
                 os.remove(item_path)

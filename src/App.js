@@ -46,20 +46,25 @@ function App() {
   }, [selectedItems, files]);
 
   const openFolder = (path) => {
-    setPathHistory([...pathHistory, currentPath]);
+    const newPathHistory = [...pathHistory, currentPath].filter(
+      (item, index, self) => self.indexOf(item) === index
+    );
+    setPathHistory(newPathHistory);
     setCurrentPath(path);
   };
-
+  
   const goToPath = (path) => {
+    const newPathHistory = pathHistory.slice(0, pathHistory.indexOf(path) + 1);
+    setPathHistory(newPathHistory);
     setCurrentPath(path);
-    setPathHistory(pathHistory.slice(0, pathHistory.indexOf(path) + 1));
   };
-
+  
   const goBack = () => {
     if (pathHistory.length > 0) {
       const previousPath = pathHistory[pathHistory.length - 1];
+      const newPathHistory = pathHistory.slice(0, pathHistory.length - 1);
+      setPathHistory(newPathHistory);
       setCurrentPath(previousPath);
-      setPathHistory(pathHistory.slice(0, pathHistory.length - 1));
     }
   };
 
@@ -86,15 +91,17 @@ function App() {
   }
 
   const getPartialSelectedItems = () => {
+    // const partialSelectedPaths = JSON.parse(JSON.stringify(selectedItems)).map(
+    //   (item) => item.split("/").slice(0, -1).join("/")
+    // );
     const partialSelectedPaths = JSON.parse(JSON.stringify(selectedItems)).map(
-      (item) => item.split("/").slice(0, -1).join("/")
+      (item) => item.replace(/\\/g, "/").split("/").slice(0, -1).join("/")
     );
     const uniquePartialSelectedPaths = [...new Set(partialSelectedPaths)];
     const obj = {
       isDirectory: true,
       status: "Partially Selected",
     };
-
     const finalPartialSelectedItems = uniquePartialSelectedPaths.map(
       (path) => ({
         ...obj,
@@ -163,6 +170,7 @@ function App() {
           status,
           name: file.name,
           size: file.size,
+          dateModified: file.dateModified,
         });
       }
     });
@@ -236,7 +244,7 @@ function App() {
     // Use the new endpoint for deleting all selected items
     axios
       .post("http://127.0.0.1:5000/delete_all", {
-        paths: selectedItemsToDisplay.map((item) => item.path),
+        paths: selectedItems,
       })
       .then(() => {
         setSelectedItems([]);
@@ -343,7 +351,7 @@ function App() {
               <td style={{ padding: "5px" }}>
                 {file.size ? formatBytes(file.size) : "--"}
               </td>
-              <td style={{ padding: "5px" }}>{file.modified || "--"}</td>
+              <td style={{ padding: "5px" }}>{file.dateModified || "--"}</td>
             </tr>
           ))}
         </tbody>
@@ -441,9 +449,10 @@ function App() {
                   <td style={{ padding: "5px" }}>
                     {item.size ? formatBytes(item.size) : "--"}
                   </td>
-                  <td style={{ padding: "5px" }}>{item.modified || "--"}</td>
+                  <td style={{ padding: "5px" }}>{item.dateModified || "--"}</td>
                   <td style={{ padding: "5px" }}>
-                    <button
+                    {item.status === "Partially Selected" ? "" :
+                    (<button 
                       onClick={() => deleteFromDivision2(item.path)}
                       style={{
                         backgroundColor: "red",
@@ -454,7 +463,7 @@ function App() {
                       }}
                     >
                       Delete
-                    </button>
+                    </button>)}
                   </td>
                 </tr>
               ))}
