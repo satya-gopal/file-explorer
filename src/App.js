@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Breadcrumb from "./components/BreadCrumb";
+import DeleteDialog from "./components/DeleteDialog";
 
 function App() {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("/");
   const [pathHistory, setPathHistory] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePath, setDeletePath] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const [selectedItemsToDisplay, setSelectedItemsToDisplay] = useState([]);
 
   console.log(files, "files");
@@ -15,6 +20,7 @@ function App() {
   console.log(pathHistory, "pathHistory");
   console.log(selectedItems, "selectedItems");
   console.log(selectedItemsToDisplay, "selectedItemsToDisplay");
+
 
   const fetchFiles = (path) => {
     axios
@@ -230,18 +236,27 @@ function App() {
       .catch((error) => console.error("Error deleting items", error));
   };
 
-  const deleteFromDivision2 = (itemPath) => {
+  const handleDelete = (itemPath) => {
+    setDeleteDialogOpen(true)
+    setDeletePath(itemPath)
+    
+  }
+
+  const deleteFromDivision2 = () => {
+    setLoading(true)
     axios
-      .post("http://127.0.0.1:5000/delete", { path: itemPath })
+      .post("http://127.0.0.1:5000/delete", { path: deletePath })
       .then(() => {
-        setSelectedItems(selectedItems.filter((item) => item !== itemPath));
+        setSelectedItems(selectedItems.filter((item) => item !== deletePath));
         fetchFiles(currentPath);
+        setLoading(false)
+        setDeleteDialogOpen(false)
       })
       .catch((error) => console.error("Error deleting item", error));
   };
 
   const deleteAllFromDivision2 = () => {
-    // Use the new endpoint for deleting all selected items
+    console.log(selectedItems,"itemPath");
     axios
       .post("http://127.0.0.1:5000/delete_all", {
         paths: selectedItems,
@@ -453,7 +468,7 @@ function App() {
                   <td style={{ padding: "5px" }}>
                     {item.status === "Partially Selected" ? "" :
                     (<button 
-                      onClick={() => deleteFromDivision2(item.path)}
+                      onClick={() => handleDelete(item.path)}
                       style={{
                         backgroundColor: "red",
                         color: "white",
@@ -473,6 +488,13 @@ function App() {
           <p>No items selected.</p>
         )}
       </div>
+      <DeleteDialog
+        openOrNot={deleteDialogOpen}
+        onCancelClick={() => setDeleteDialogOpen(false)}
+        label="Are you sure you want to delete this file or folder?"
+        onOKClick={deleteAllFromDivision2}
+        deleteLoading={loading}
+      />
     </div>
   );
 }
